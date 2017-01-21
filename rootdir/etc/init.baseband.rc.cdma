@@ -40,7 +40,7 @@ on fs
 
 
     mkdir /firmware 0771 system system
-    mount vfat /dev/block/platform/15570000.ufs/by-name/RADIO /firmware ro shortname=lower fmask=0133,dmask=0022
+    mount vfat /dev/block/platform/15570000.ufs/by-name/RADIO /firmware rw shortname=lower fmask=0133,dmask=0022
 
     chown system radio /dev/block/platform/15570000.ufs/by-name
     chmod 0775 /dev/block/platform/15570000.ufs/by-name
@@ -49,7 +49,7 @@ on fs
 
 # AT Distributor for factory test
 service at_distributor /system/bin/at_distributor
-    class late_start
+    class main
     user root
     group radio misc log
 
@@ -75,10 +75,9 @@ service qmuxd /system/bin/qmuxd
     group radio audio bluetooth gps qcom_diag
 
 service diag_mdlog_start /system/bin/diag_mdlog
-    class late_start
+    class main
     user sdcard_rw
     group system qcom_diag sdcard_rw sdcard_r media_rw
-    disabled
     oneshot
 
 service diag_mdlog_stop /system/bin/diag_mdlog -k
@@ -94,10 +93,9 @@ service ril-daemon1 /system/bin/rild -c 2
     socket rild-debug2 stream 660 radio system
     user root
     group radio cache inet misc audio log qcom_diag system drmrpc sdcard_r sdcard_rw diag
-    disabled
 
 service atfwd /system/bin/ATFWD-daemon
-    class late_start
+    class main
     user system
     group system radio
 
@@ -107,10 +105,8 @@ service mdm_helper /system/bin/mdm_helper
 
 service mdm_helper_proxy /system/bin/mdm_helper_proxy
     class core
-    disabled
 
 service umount_cpdump /system/bin/umount /cpdump
-    disabled
     oneshot
 
 service irsc_util /system/bin/logwrapper /system/bin/irsc_util "/etc/sec_config"
