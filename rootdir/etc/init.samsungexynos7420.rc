@@ -213,10 +213,9 @@ on boot
     write /sys/devices/virtual/timed_output/vibrator/intensity 7500
 
     # update foreground cpuset now that processors are up
-    write /dev/cpuset/foreground/cpus 0-7
-    write /dev/cpuset/foreground/boost/cpus 4-7
+    write /dev/cpuset/foreground/cpus 0
     write /dev/cpuset/background/cpus 0
-    write /dev/cpuset/system-background/cpus 0-3
+    write /dev/cpuset/system-background/cpus 0
 
     # Memory managements
     write /proc/sys/vm/min_free_kbytes 32768
@@ -245,7 +244,7 @@ on boot
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy 1
     write /sys/devices/virtual/sec/sec_slow/io_is_busy 1
 
-    #setprop ro.radio.noril yes
+    #setprop ro.radio.noril no
 
     # IPSec for VOLTE
     chown root system /dev/socket
@@ -256,7 +255,7 @@ on boot
 
     # Set up kernel tracing, but disable it by default
     chmod 0222 /sys/kernel/debug/tracing/trace_marker
-    write /sys/kernel/debug/tracing/tracing_on 0
+    write /sys/kernel/debug/tracing/tracing_on 1
 
     # PMS DVFS
     chown radio system /sys/power/enable_dm_hotplug
@@ -325,13 +324,6 @@ on boot
     chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/go_hispeed_load
     chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/above_hispeed_delay
     chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/above_hispeed_delay
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/boost
-    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/boost
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/input_boost
-    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/input_boost
-    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse_duration
-    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse_duration
     chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/io_is_busy
     chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/io_is_busy
     chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/cpu_util
@@ -387,13 +379,6 @@ on boot
     chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/go_hispeed_load
     chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/above_hispeed_delay
     chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/above_hispeed_delay
-    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/boost
-    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/boost
-    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse
-    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/input_boost
-    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/input_boost
-    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse_duration
-    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse_duration
     chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy
     chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy
     chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/cpu_util
@@ -495,12 +480,6 @@ on boot
     chown radio system /efs/prov/ffffffff00000000000000000000000c.tlbin
     chmod 0660 /efs/prov/ffffffff00000000000000000000000c.tlbin
 
-# CS socket
-    mkdir /dev/socket/cs_socket 0770 system system
-
-# MSP FactoryApp
-    mkdir /efs/FactoryApp 0775 system system
-
 # permissions for bluetooth.
     setprop ro.bt.bdaddr_path "/efs/bluetooth/bt_addr"
     chown bluetooth net_bt_stack ro.bt.bdaddr_path
@@ -521,7 +500,7 @@ on boot
     chown system radio /sys/class/android_usb/android0/usb_lock
 
 # SSWAP
-    write /proc/sys/vm/swappiness 130
+    write /proc/sys/vm/swappiness 100
 
     # FM Radio
     chmod 0640 /dev/fmradio
@@ -542,15 +521,6 @@ on fs
     chmod 0755 /persdata
     chown system system /persdata/absolute
     chmod 0750 /persdata/absolute
-
-    #For SBFS partition
-    mkdir /sbfs 0755 system system
-    wait /dev/block/platform/15570000.ufs/by-name/SBFS
-    check_fs /dev/block/platform/15570000.ufs/by-name/SBFS ext4
-    mount ext4 /dev/block/platform/15570000.ufs/by-name/SBFS /sbfs nosuid nodev barrier=1
-
-    chown system system /sbfs
-    chmod 0755 /sbfs
 
 # Permissions for TouchScreen
     chown system radio /sys/class/sec/tsp/cmd
@@ -808,9 +778,6 @@ on fs
 # Permission for DRM Key
     chmod 0644 /factory/wv.keys
 
-#ARGOSD network_throughput
-    chown system system /dev/network_throughput
-
 # TSP & Pressure Sensor
     chown system system /dev/i2c-7
     chmod 0660 /dev/i2c-7
@@ -988,7 +955,7 @@ service mobicore /system/bin/mcDriverDaemon -r /system/app/FFFFFFFF0000000000000
     group system
 
 service fingerprintd /system/bin/fingerprintd
-    class late_start
+    class main
     user system
     group input
 
@@ -1008,7 +975,7 @@ on property:sys.boot_completed=1
     write /sys/devices/system/cpu/cpu5/online 1
     write /sys/devices/system/cpu/cpu6/online 1
     write /sys/devices/system/cpu/cpu7/online 1
-    write /sys/power/enable_dm_hotplug 1
+    write /sys/power/enable_dm_hotplug 0
 
 on charger
 # Set cpu governor to powersave while in charging mode
@@ -1032,7 +999,6 @@ service cs_service /system/bin/cs
     class main
     user system
     group system
-    disabled
 on property:sys.mobicoredaemon.enable=true
     start cs_service
 
